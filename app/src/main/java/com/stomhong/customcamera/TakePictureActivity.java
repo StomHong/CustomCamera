@@ -11,6 +11,7 @@ import android.hardware.Camera.Size;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
@@ -34,7 +35,6 @@ import java.util.Locale;
  * <p>拍照页面</p>
  * 这里要注意一个问题，就是{@link Bundle}对象只能传递最大为40K的数据?
  * <ol>遇到的错误：JavaBinder: !!! FAILED BINDER TRANSACTION !!!</ol>
- * <ol>解决办法：压缩照片</ol>
  *
  * @author StomHong
  * @since 2016-4-20
@@ -146,8 +146,10 @@ public class TakePictureActivity extends Activity {
             Camera.Size preSize = getOptimalPreviewSize(param,supporPreviewSizes, width, height);
             param.setPreviewSize(preSize.width, preSize.height);
 
-            int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
-            int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+            DisplayMetrics outMetrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+            int screenWidth = outMetrics.widthPixels;
+            int screenHeight = outMetrics.heightPixels;
             float screenScale = (float) screenWidth / screenHeight;
             Camera.Size picSize = getOptimalPictureSize(param.getSupportedPictureSizes(), screenScale,preSize);
             param.setPictureSize(picSize.width, picSize.height);
@@ -392,7 +394,6 @@ public class TakePictureActivity extends Activity {
             default:
                 break;
         }
-
         int result;
         if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
             result = (info.orientation + degrees) % 360;
@@ -439,7 +440,5 @@ public class TakePictureActivity extends Activity {
                 e.printStackTrace();
             }
         }
-
     }
-
 }

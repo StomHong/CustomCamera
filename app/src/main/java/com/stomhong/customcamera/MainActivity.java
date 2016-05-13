@@ -31,7 +31,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private String FILE_PATH = Environment.getExternalStorageDirectory().getPath() + "/DCIM/Youxiao/"+"p"+getSystemTime()+".jpg";
-
     private Button mButton_OpenCustomCamera;
     private Button mButton_OpenSystemCamera;
     private Button mButton_OpenAlbum;
@@ -131,7 +130,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == Activity.RESULT_OK) {
-            Bitmap bitmap;
+
             switch (requestCode) {
 
                 case 302:
@@ -147,24 +146,75 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     //获取相册返回的数据
                     if (data != null && data.getData() != null) {
                         Uri uri = data.getData();
-                        //根据需要，也可以加上Option这个参数
-                        InputStream is = null;
-                        try {
-                            is = getContentResolver().openInputStream(uri);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                        bitmap = BitmapFactory.decodeStream(is);
+                        Bitmap bitmap = decodeSampledBitmapFromUri(uri,600,600);
                         mImageView_Picture.setImageBitmap(bitmap);
                     }
                     break;
-
             }
+        }
+    }
 
+    /**
+     * 计算取样率
+     *
+     * @param options
+     * @param reqWidth
+     * @param reqHeight
+     * @return
+     */
+    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
 
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
         }
 
+        return inSampleSize;
+    }
 
+    /**
+     * 从输入流中将图片解析成bitmap
+     *
+     * @param uri
+     * @param reqWidth
+     * @param reqHeight
+     * @return
+     */
+    public  Bitmap decodeSampledBitmapFromUri(Uri uri,int reqWidth, int reqHeight) {
+        InputStream is = null;
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        try {
+            is = getContentResolver().openInputStream(uri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        BitmapFactory.decodeStream(is, null, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+
+        try {
+            is = getContentResolver().openInputStream(uri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return BitmapFactory.decodeStream(is, null, options);
     }
 
     /**
